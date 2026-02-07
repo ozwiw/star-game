@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Star Upgrader</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --accent: #ffaa00; --bg: #0f0f17; --card: #1f1f2e; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; box-sizing: border-box; }
+        
+        .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .balance-box { background: var(--card); padding: 10px 15px; border-radius: 12px; border: 1px solid #333; }
+        
+        /* Тумблер */
+        .mode-switch { display: flex; background: var(--card); border-radius: 20px; padding: 4px; margin-bottom: 20px; }
+        .mode-btn { padding: 8px 20px; border-radius: 18px; border: none; color: white; cursor: pointer; background: transparent; transition: 0.3s; }
+        .mode-btn.active { background: var(--accent); color: black; font-weight: bold; }
+
+        /* Колесо */
+        .wheel-container { position: relative; width: 260px; height: 260px; margin: 20px 0; }
+        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 8px solid var(--card); background: conic-gradient(#44ff44 0% 40%, #ff4444 40% 100%); transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--accent); z-index: 5; }
+
+        /* Управление */
+        .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 20px; box-sizing: border-box; }
+        input { width: 100%; background: #000; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; text-align: center; font-size: 1.1rem; box-sizing: border-box; }
+        .mult-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .m-btn { background: #2d2d44; border: 1px solid #444; color: white; padding: 10px 0; border-radius: 8px; font-size: 0.9rem; }
+        .m-btn.active { border-color: var(--accent); background: #3d3d5c; }
+        
+        .main-btn { width: 100%; background: var(--accent); color: black; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; }
+        .withdraw-btn { width: 100%; background: transparent; color: #777; border: 1px solid #333; padding: 10px; border-radius: 12px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="balance-box">💰 <span id="balanceDisplay">1000.00</span> ⭐️</div>
+</div>
+
+<div class="mode-switch">
+    <button id="btnDemo" class="mode-btn active" onclick="setMode('demo')">DEMO</button>
+    <button id="btnReal" class="mode-btn" onclick="setMode('real')">REAL</button>
+</div>
+
+<div class="wheel-container">
+    <div class="pointer"></div>
+    <div id="wheel" class="wheel"></div>
+</div>
+
+<div class="controls">
+    <input type="number" id="betInput" value="20" placeholder="Ставка звезд">
+    <div class="mult-grid">
+        <button class="m-btn" onclick="setMult(1.2, 70, this)">x1.2</button>
+        <button class="m-btn active" onclick="setMult(2.0, 40, this)">x2.0</button>
+        <button class="m-btn" onclick="setMult(5.0, 15, this)">x5.0</button>
+        <button class="m-btn" onclick="setMult(10.0, 5, this)">x10.0</button>
+    </div>
+    <button class="main-btn" onclick="play()">АПГРЕЙД</button>
+    <button class="withdraw-btn" onclick="withdraw()">Вывести средства</button>
+</div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let mode = 'demo';
+    let demoBalance = 1000;
+    let realBalance = 0; // В реальности подтянется из бота
+    let currentMult = 2.0;
+    let greenZone = 40;
+    let rotation = 0;
+
+    function setMode(m) {
+        mode = m;
+        document.getElementById('btnDemo').classList.toggle('active', m === 'demo');
+        document.getElementById('btnReal').classList.toggle('active', m === 'real');
+        updateBalance();
+    }
+
+    function setMult(val, zone, btn) {
+        currentMult = val;
+        greenZone = zone;
+        document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('wheel').style.background = `conic-gradient(#44ff44 0% ${greenZone}%, #ff4444 ${greenZone}% 100%)`;
+    }
+
+    function updateBalance() {
+        document.getElementById('balanceDisplay').innerText = (mode === 'demo' ? demoBalance : realBalance).toFixed(2);
+    }
+
+    function play() {
+        let bet = parseFloat(document.getElementById('betInput').value);
+        if (isNaN(bet) || bet < 20) return alert("Мин. ставка 20 ⭐️");
+
+        if (mode === 'demo') {
+            if (demoBalance < bet) return alert("Недостаточно демо-звезд!");
+            let win = Math.random() < 0.8; // В демо 80% победа
+            spin(win);
+            setTimeout(() => {
+                if(win) demoBalance += bet * currentMult;
+                else demoBalance -= bet;
+                updateBalance();
+            }, 4000);
+        } else {
+            // РЕАЛЬНЫЙ РЕЖИМ - Всегда проигрыш
+            tg.sendData(JSON.stringify({action: "spin_real", bet: bet}));
+            spin(false);
+            // Реальный баланс обновится через бота
+        }
+    }
+
+    function spin(win) {
+        const wheel = document.getElementById('wheel');
+        let stopAngle;
+        if (win) {
+            // Угол в зеленой зоне (от 0 до greenZone * 3.6)
+            stopAngle = Math.random() * (greenZone * 3.6 - 10) + 5;
+        } else {
+            // Угол в красной зоне (всегда чуть-чуть дальше зеленой)
+            stopAngle = (greenZone * 3.6) + 10 + Math.random() * 20;
+        }
+        rotation += (360 * 5) - stopAngle; 
+        wheel.style.transform = `rotate(${rotation}deg)`;
+    }
+
+    function withdraw() {
+        tg.sendData(JSON.stringify({action: "withdraw"}));
+        alert("Заявка на вывод создана! Ожидайте зачисления в течение 24 часов.");
+    }
+</script>
+</body>
+</html>
