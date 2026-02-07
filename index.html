@@ -1,53 +1,48 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Star Upgrader</title>
+    <title>Star Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #ffaa00; --blue: #00f2ff; --bg: #0f111a; --card: #161b22; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow: hidden; }
-        .balance-box { background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); width: 100%; text-align: center; font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box; }
-        .mode-switch { display: flex; background: #000; border-radius: 25px; padding: 5px; border: 2px solid var(--blue); margin-bottom: 25px; }
-        .mode-btn { padding: 8px 20px; border-radius: 20px; border: none; color: white; background: transparent; cursor: pointer; font-weight: bold; }
-        .mode-btn.active { background: var(--blue); color: black; }
-        .wheel-outer { position: relative; width: 260px; height: 260px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
-        .static-wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #222; background: conic-gradient(#ff3333 0deg 120deg, #00ff88 120deg 240deg, #ff3333 240deg 360deg); }
-        #needle { position: absolute; width: 6px; height: 110px; background: #fff; top: 50%; left: 50%; transform-origin: 50% 0%; border-radius: 3px; z-index: 10; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); transform: translate(-50%, 0) rotate(0deg); }
-        #needle::after { content: ''; position: absolute; bottom: -15px; left: -7px; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #fff; }
-        .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 25px; box-sizing: border-box; }
-        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 10px; outline: none; }
-        .btn-main { width: 100%; background: var(--gold); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { width: 48%; background: transparent; border: 1px solid var(--blue); color: var(--blue); padding: 10px; border-radius: 12px; cursor: pointer; }
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        body { background: #0f111a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .bal-box { background: #161b22; padding: 15px; border-radius: 15px; border: 2px solid #ffaa00; width: 100%; text-align: center; color: #ffaa00; font-weight: bold; margin-bottom: 20px; }
+        .mode-sw { display: flex; background: #000; border-radius: 20px; padding: 5px; margin-bottom: 20px; }
+        .m-btn { padding: 10px 20px; border: none; background: none; color: white; cursor: pointer; font-weight: bold; }
+        .m-btn.active { background: #00f2ff; color: black; border-radius: 15px; }
+        .wheel-box { position: relative; width: 250px; height: 250px; margin-bottom: 20px; }
+        .wheel-bg { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#ff3333 0deg 120deg, #00ff88 120deg 240deg, #ff3333 240deg 360deg); border: 4px solid #222; }
+        #needle { position: absolute; width: 4px; height: 100px; background: #fff; top: 50%; left: 50%; transform-origin: 50% 0%; transition: 4s cubic-bezier(0.1, 0, 0.1, 1); transform: translate(-50%, 0) rotate(0deg); }
+        .btn-go { width: 100%; background: #ffaa00; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-alt { width: 48%; background: none; border: 1px solid #00f2ff; color: #00f2ff; padding: 10px; border-radius: 10px; margin-top: 10px; }
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
     </style>
 </head>
 <body>
-    <div class="balance-box">💰 <span id="bal">1000.00</span> ⭐️</div>
-    <div class="mode-switch">
-        <button id="bD" class="mode-btn active" onclick="setM('demo')">DEMO</button>
-        <button id="bR" class="mode-btn" onclick="setM('real')">REAL</button>
+    <div class="bal-box">💰 <span id="balDisplay">0.00</span> ⭐️</div>
+    <div class="mode-sw">
+        <button id="bD" class="m-btn active" onclick="setMode('demo')">DEMO</button>
+        <button id="bR" class="m-btn" onclick="setMode('real')">REAL</button>
     </div>
-    <div class="wheel-outer">
-        <div class="static-wheel"></div>
+    <div class="wheel-box">
+        <div class="wheel-bg"></div>
         <div id="needle"></div>
     </div>
-    <div class="controls">
-        <input type="number" id="bet" value="20">
-        <button class="btn-main" onclick="spin()">УЛУЧШИТЬ</button>
-        <div style="display: flex; justify-content: space-between;">
-            <button class="btn-sub" onclick="showM('dep')">ДЕП</button>
-            <button class="btn-sub" onclick="showM('out')">ВЫВОД</button>
-        </div>
+    <input type="number" id="bet" value="20" style="width:100%; padding:10px; margin-bottom:10px; background:#000; color:white; border:1px solid #333; text-align:center;">
+    <button class="btn-go" onclick="play()">АПГРЕЙД</button>
+    <div style="width:100%; display:flex; justify-content:space-between;">
+        <button class="btn-alt" onclick="openM('dep')">ДЕП</button>
+        <button class="btn-alt" onclick="openM('out')">ВЫВОД</button>
     </div>
+
     <div id="modal">
-        <div style="background:#161b22; padding:20px; border-radius:15px; width:80%; text-align:center; border:1px solid var(--blue);">
+        <div style="background:#161b22; padding:20px; border-radius:15px; width:80%; text-align:center;">
             <h3 id="mT">ДЕЙСТВИЕ</h3>
-            <input type="number" id="mA" value="100">
-            <div id="wB" style="display:none; margin-top:10px;"><input type="text" id="mW" placeholder="ID / Кошелек"></div>
-            <button class="btn-main" onclick="send()">ОТПРАВИТЬ</button>
-            <button class="btn-sub" style="width:100%;" onclick="closeM()">ОТМЕНА</button>
+            <input type="number" id="mA" value="100" style="width:90%; padding:10px; margin-bottom:10px;">
+            <input type="text" id="mW" placeholder="Кошелек" style="width:90%; padding:10px; display:none; margin-bottom:10px;">
+            <button class="btn-go" onclick="confirm()">ОТПРАВИТЬ</button>
+            <button class="btn-alt" style="width:100%" onclick="document.getElementById('modal').style.display='none'">ОТМЕНА</button>
         </div>
     </div>
 
@@ -55,36 +50,35 @@
     let tg = window.Telegram.WebApp; tg.expand();
     const urlParams = new URLSearchParams(window.location.search);
     let realBal = parseFloat(urlParams.get('bal')) || 0;
-    let mode = 'demo', demoBal = 1000, spinning = false, curRot = 0, act = '';
+    let mode = 'demo', demoBal = 1000, spinning = false, rot = 0, currentAct = '';
 
-    function update() { document.getElementById('bal').innerText = (mode == 'demo' ? demoBal : realBal).toFixed(2); }
-    function setM(m) { 
-        if(spinning) return; mode = m; 
-        document.getElementById('bD').className = m=='demo'?'mode-btn active':'mode-btn';
-        document.getElementById('bR').className = m=='real'?'mode-btn active':'mode-btn';
-        update(); 
-    }
-    function spin() {
+    function update() { document.getElementById('balDisplay').innerText = (mode=='demo' ? demoBal : realBal).toFixed(2); }
+    function setMode(m) { mode = m; document.getElementById('bD').className = m=='demo'?'m-btn active':'m-btn'; document.getElementById('bR').className = m=='real'?'m-btn active':'m-btn'; update(); }
+    
+    function play() {
         if(spinning) return;
         let b = parseFloat(document.getElementById('bet').value);
         if((mode=='demo' && demoBal < b) || (mode=='real' && realBal < b)) return alert("Мало звезд!");
+        
         spinning = true;
         if(mode=='demo') demoBal -= b; else realBal -= b;
         update();
-        let win = Math.random() < 0.3;
+
+        let win = Math.random() < 0.4;
         let target = win ? (180 + (Math.random()*40-20)) : (0 + (Math.random()*40-20));
-        curRot += (360 * 5) + (target - (curRot % 360));
-        document.getElementById('needle').style.transform = `translate(-50%, 0) rotate(${curRot}deg)`;
+        rot += (360 * 5) + (target - (rot % 360));
+        document.getElementById('needle').style.transform = `translate(-50%, 0) rotate(${rot}deg)`;
+
         setTimeout(() => {
             if(win) { if(mode=='demo') demoBal += b*2; else realBal += b*2; alert("🎁 ВЫИГРЫШ!"); }
-            else { alert("❌ ПРОИГРЫШ!"); }
+            else alert("❌ ПРОИГРЫШ!");
             spinning = false; update();
         }, 4100);
     }
-    function showM(t) { act = t; document.getElementById('modal').style.display='flex'; document.getElementById('wB').style.display = t=='dep'?'none':'block'; }
-    function closeM() { document.getElementById('modal').style.display='none'; }
-    function send() {
-        tg.sendData(JSON.stringify({action: act, amount: document.getElementById('mA').value, wallet: document.getElementById('mW').value}));
+
+    function openM(t) { currentAct = t; document.getElementById('modal').style.display='flex'; document.getElementById('mT').innerText = t=='dep'?'ДЕП':'ВЫВОД'; document.getElementById('mW').style.display = t=='dep'?'none':'block'; }
+    function confirm() {
+        tg.sendData(JSON.stringify({action: currentAct, amount: document.getElementById('mA').value, wallet: document.getElementById('mW').value}));
         tg.close();
     }
     update();
