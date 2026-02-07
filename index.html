@@ -82,56 +82,27 @@
 
 <script>
     let tg = window.Telegram.WebApp; tg.expand();
-    let demoBal = 1000, spinning = false, currentRot = 0;
+    
+    // Получаем баланс из URL (который прислал бот)
+    const urlParams = new URLSearchParams(window.location.search);
+    let realBal = parseFloat(urlParams.get('bal')) || 0;
+    
+    let mode = 'demo', demoBal = 1000, spinning = false, curRot = 0;
 
-    function update() { document.getElementById('bal').innerText = demoBal.toFixed(2); }
-
-    function spin() {
-        if(spinning) return;
-        let b = parseFloat(document.getElementById('bet').value);
-        if(b < 20 || demoBal < b) return alert("Недостаточно звезд!");
-        
-        spinning = true; demoBal -= b; update();
-        
-        // 1. РЕШАЕМ: ВЫИГРЫШ ИЛИ НЕТ
-        let isWin = Math.random() < 0.5; // Ровно 50% шанс для теста
-        
-        // 2. УСТАНАВЛИВАЕМ ЦЕЛЬ (Градусы)
-        // 180 градусов — это ровно низ (ЗЕЛЕНЫЙ)
-        // 0 градусов — это ровно верх (КРАСНЫЙ)
-        let targetDeg;
-        if (isWin) {
-            targetDeg = 180 + (Math.random() * 40 - 20); // От 160 до 200 (Глубоко в зеленом)
-        } else {
-            targetDeg = 0 + (Math.random() * 80 - 40);   // Вокруг верха (Красный)
-        }
-        
-        // 3. КРУТИМ (5 полных кругов + цель)
-        currentRot += (360 * 5) + (targetDeg - (currentRot % 360));
-        
-        const needle = document.getElementById('needle');
-        needle.style.transform = `translate(-50%, 0) rotate(${currentRot}deg)`;
-        
-        setTimeout(() => {
-            if(isWin) { 
-                demoBal += b * 2; 
-                alert("🎉 ВЫИГРЫШ!"); 
-            } else { 
-                alert("❌ ПРОИГРЫШ!"); 
-            }
-            spinning = false; update();
-        }, 4100);
+    function update() { 
+        // Если REAL - показываем реальный баланс, если DEMO - демо
+        document.getElementById('bal').innerText = (mode == 'demo' ? demoBal : realBal).toFixed(2); 
     }
 
-    function showM(t) { act = t; document.getElementById('modal').style.display='flex'; document.getElementById('mTitle').innerText = t=='dep'?'ПОПОЛНЕНИЕ':'ВЫВОД'; document.getElementById('wBox').style.display = t=='dep'?'none':'block'; }
-    function closeM() { document.getElementById('modal').style.display='none'; }
-    function sendToBot() {
-        let val = document.getElementById('mAmt').value;
-        let wal = document.getElementById('mWallet').value;
-        tg.sendData(JSON.stringify({action: act, amount: val, wallet: wal}));
-        tg.close();
+    // При переключении режима вызываем обновление
+    function setM(m) { 
+        mode = m; 
+        document.getElementById('bD').className = m=='demo'?'mode-btn active':'mode-btn';
+        document.getElementById('bR').className = m=='real'?'mode-btn active':'mode-btn';
+        update(); 
     }
-    update();
+    
+    // ... остальной код спина и отрисовки (оставь из прошлого сообщения) ...
 </script>
 </body>
 </html>
