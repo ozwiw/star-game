@@ -3,153 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Star Neon Upgrader</title>
+    <title>Star Upgrader</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --gold: #ffaa00; --blue: #00f2ff; --bg: #0f111a; --card: #161b22; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow: hidden; }
-        .balance-box { background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(255, 170, 0, 0.4); width: 100%; text-align: center; font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .balance-box { background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); width: 100%; text-align: center; font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box; }
         .mode-switch { display: flex; background: #000; border-radius: 25px; padding: 5px; border: 2px solid var(--blue); margin-bottom: 25px; }
         .mode-btn { padding: 10px 25px; border-radius: 20px; border: none; color: white; background: transparent; cursor: pointer; font-weight: bold; }
-        .mode-btn.active { background: var(--blue); color: black; box-shadow: 0 0 10px var(--blue); }
-        .wheel-container { position: relative; width: 280px; height: 280px; margin-bottom: 30px; }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #222; box-shadow: 0 0 25px rgba(0, 242, 255, 0.5); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); transform: rotate(-90deg); }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); z-index: 10; filter: drop-shadow(0 0 5px var(--gold)); }
-        .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 25px; border: 1px solid #333; box-sizing: border-box; }
-        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 15px; border-radius: 12px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; box-sizing: border-box; outline: none; }
-        .mult-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .m-btn { background: #1a1f29; border: 1px solid #444; color: white; padding: 12px 0; border-radius: 10px; }
+        .mode-btn.active { background: var(--blue); color: black; }
+        .wheel-container { position: relative; width: 260px; height: 260px; margin-bottom: 30px; }
+        #wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #222; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); transform: rotate(0deg); }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); z-index: 10; }
+        .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 25px; box-sizing: border-box; }
+        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 10px; outline: none; }
+        .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .m-btn { background: #1a1f29; border: 1px solid #444; color: white; padding: 10px 0; border-radius: 8px; font-size: 0.8rem; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); }
-        .main-btn { width: 100%; background: var(--gold); color: black; border: none; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; margin-bottom: 10px; }
-        .dep-btn { width: 100%; background: #00ff88; color: black; border: none; padding: 12px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
-        .withdraw-btn { width: 100%; background: transparent; color: var(--blue); border: 1px solid var(--blue); padding: 12px; border-radius: 15px; cursor: pointer; }
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        .btn-main { width: 100%; background: var(--gold); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-sub { width: 100%; background: transparent; border: 1px solid var(--blue); color: var(--blue); padding: 10px; border-radius: 12px; cursor: pointer; margin-bottom: 5px; }
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div class="balance-box">💰 <span id="balanceDisplay">1000.00</span> ⭐️</div>
+<div class="balance-box">💰 <span id="bal">1000.00</span> ⭐️</div>
 
 <div class="mode-switch">
-    <button id="btnDemo" class="mode-btn active" onclick="setMode('demo')">DEMO</button>
-    <button id="btnReal" class="mode-btn" onclick="setMode('real')">REAL</button>
+    <button id="bD" class="mode-btn active" onclick="setM('demo')">DEMO</button>
+    <button id="bR" class="mode-btn" onclick="setM('real')">REAL</button>
 </div>
 
 <div class="wheel-container">
     <div class="pointer"></div>
-    <div id="wheel" class="wheel"></div>
+    <canvas id="wheel" width="300" height="300"></canvas>
 </div>
 
 <div class="controls">
-    <input type="number" id="betInput" value="20">
-    <div class="mult-grid">
-        <button class="m-btn" onclick="setMult(1.2, 75, this)">x1.2</button>
-        <button class="m-btn active" onclick="setMult(2.0, 45, this)">x2.0</button>
-        <button class="m-btn" onclick="setMult(5.0, 15, this)">x5.0</button>
-        <button class="m-btn" onclick="setMult(10.0, 7, this)">x10.0</button>
+    <input type="number" id="bet" value="20">
+    <div class="m-grid">
+        <button class="m-btn active" onclick="setMult(2, 50, this)">x2.0</button>
+        <button class="m-btn" onclick="setMult(5, 20, this)">x5.0</button>
+        <button class="m-btn" onclick="setMult(10, 10, this)">x10.0</button>
+        <button class="m-btn" onclick="setMult(50, 2, this)">x50.0</button>
     </div>
-    <button class="main-btn" onclick="play()">АПГРЕЙД</button>
-    <button class="dep-btn" onclick="openModal('dep')">ПОПОЛНИТЬ</button>
-    <button class="withdraw-btn" onclick="openModal('out')">ВЫВОД</button>
+    <button class="btn-main" onclick="spin()">АПГРЕЙД</button>
+    <button class="btn-sub" onclick="showM('dep')">ПОПОЛНИТЬ</button>
+    <button class="btn-sub" onclick="showM('out')">ВЫВОД</button>
 </div>
 
 <div id="modal">
-    <div style="background: var(--card); padding: 30px; border-radius: 25px; border: 2px solid var(--blue); width: 100%; max-width: 400px; text-align: center;">
-        <h2 id="modalTitle" style="color: var(--blue)">СУММА</h2>
-        <input type="number" id="modalAmount" value="100">
-        <div id="walletInputBox" style="display:none">
-            <input type="text" id="modalExtra" placeholder="Кошелек / ID">
-        </div>
-        <button class="main-btn" onclick="confirmModal()">ОТПРАВИТЬ</button>
-        <button class="withdraw-btn" style="border:none" onclick="closeModal()">ОТМЕНА</button>
+    <div style="background:#161b22; padding:20px; border-radius:15px; width:80%; text-align:center; border:1px solid var(--blue);">
+        <h3 id="mTitle">СУММА</h3>
+        <input type="number" id="mAmt" value="100">
+        <input type="text" id="mWallet" placeholder="ID / Кошелек" style="display:none">
+        <button class="btn-main" onclick="sendToBot()">ОТПРАВИТЬ</button>
+        <button class="btn-sub" onclick="closeM()">ОТМЕНА</button>
     </div>
 </div>
 
 <script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-    let mode = 'demo', demoBalance = 1000, totalRotation = 0, currentMult = 2.0, greenZonePercent = 45, isSpinning = false, currentAction = '';
+    let tg = window.Telegram.WebApp; tg.expand();
+    let mode = 'demo', demoBal = 1000, currentMult = 2, greenSize = 50, spinning = false, rot = 0, act = '';
 
-    function setMode(m) { if(isSpinning) return; mode = m; document.getElementById('btnDemo').classList.toggle('active', m === 'demo'); document.getElementById('btnReal').classList.toggle('active', m === 'real'); updateBalance(); }
-    function setMult(val, zone, btn) { if(isSpinning) return; currentMult = val; greenZonePercent = zone; document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); drawWheel(); }
+    function setM(m) { mode = m; document.getElementById('bD').className = m=='demo'?'mode-btn active':'mode-btn'; document.getElementById('bR').className = m=='real'?'mode-btn active':'mode-btn'; update(); }
+    function setMult(v, s, b) { currentMult = v; greenSize = s; document.querySelectorAll('.m-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); draw(); }
     
-    // Рисуем колесо так, чтобы 0 градусов было ровно на 12 часов
-    function drawWheel() { 
-        document.getElementById('wheel').style.background = `conic-gradient(from 0deg, #00ff88 0deg ${(greenZonePercent/100)*360}deg, #ff3333 ${(greenZonePercent/100)*360}deg 360deg)`; 
+    function draw() {
+        const ctx = document.getElementById('wheel').getContext('2d');
+        ctx.clearRect(0,0,300,300);
+        let gRad = (greenSize/100)*Math.PI*2;
+        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140,-Math.PI/2, -Math.PI/2 + gRad); ctx.fillStyle = "#00ff88"; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140,-Math.PI/2 + gRad, -Math.PI/2 + Math.PI*2); ctx.fillStyle = "#ff3333"; ctx.fill();
     }
 
-    function updateBalance() { 
-        document.getElementById('balanceDisplay').innerText = (mode === 'demo' ? demoBalance : 0.00).toFixed(2); 
-        if(mode === 'real') document.getElementById('balanceDisplay').innerText = "REAL MODE"; 
-    }
+    function update() { document.getElementById('bal').innerText = mode=='demo'?demoBal.toFixed(2):'0.00 REAL'; }
 
-    function play() {
-        if (isSpinning) return;
-        let bet = parseFloat(document.getElementById('betInput').value);
-        if (bet < 20) return alert("Минимум 20⭐️");
-        
-        if (mode === 'demo') {
-            if (demoBalance < bet) return alert("Мало демо-звезд");
-            isSpinning = true;
-            demoBalance -= bet;
-            updateBalance();
-
-            // 1. Сначала РЕШАЕМ результат
-            let isWin = Math.random() < 0.4; // 40% на победу
-            
-            const wheel = document.getElementById('wheel');
-            const greenZoneDeg = (greenZonePercent / 100) * 360;
-            
-            // 2. Рассчитываем угол для остановки. 
-            // 0 градусов — это начало зеленого сектора.
-            let targetAngle;
-            if (isWin) {
-                // Выбираем точку в середине зеленого сектора (с отступами)
-                targetAngle = (greenZoneDeg / 2); 
-            } else {
-                // Выбираем точку в середине красного сектора
-                targetAngle = greenZoneDeg + ((360 - greenZoneDeg) / 2);
-            }
-
-            // 3. Крутим. Нужно повернуть колесо ТАК, чтобы targetAngle оказался под стрелкой (0 градусов)
-            // Добавляем полные обороты
-            let extraSpins = 3600; // 10 кругов
-            // Мы крутим колесо против часовой, чтобы сектор пришел к стрелке
-            totalRotation += extraSpins + (360 - targetAngle); 
-            
-            wheel.style.transform = `rotate(${totalRotation}deg)`;
-
+    function spin() {
+        if(spinning) return;
+        let b = parseFloat(document.getElementById('bet').value);
+        if(b < 20) return alert("Минимум 20⭐️");
+        if(mode == 'demo') {
+            if(demoBal < b) return alert("Нет звезд");
+            spinning = true; demoBal -= b; update();
+            let win = Math.random() < 0.3; // 30% шанс
+            let target = win ? 0 : 180; // 0 - центр зеленого, 180 - центр красного
+            rot += (360*5) + (360 - (rot%360)) - target;
+            document.getElementById('wheel').style.transform = `rotate(${rot}deg)`;
             setTimeout(() => {
-                if (isWin) {
-                    let winAmt = bet * currentMult;
-                    demoBalance += winAmt;
-                    alert("✅ ПОБЕДА! +" + winAmt.toFixed(2));
-                } else {
-                    alert("❌ ПРОИГРЫШ");
-                }
-                updateBalance();
-                isSpinning = false;
-            }, 4100);
+                if(win) { demoBal += b * currentMult; alert("ВЫИГРЫШ! 🎉"); } else { alert("ПРОИГРЫШ ❌"); }
+                spinning = false; update();
+            }, 4000);
         } else {
-            tg.sendData(JSON.stringify({action: "spin_real", bet: bet}));
+            tg.sendData(JSON.stringify({action:"spin_real", bet:b}));
             tg.close();
         }
     }
 
-    // Модалки
-    function openModal(type) { currentAction = type; document.getElementById('modalTitle').innerText = type === 'dep' ? 'ПОПОЛНЕНИЕ' : 'ВЫВОД'; document.getElementById('walletInputBox').style.display = type === 'dep' ? 'none' : 'block'; document.getElementById('modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function confirmModal() {
-        let amt = document.getElementById('modalAmount').value;
-        let extra = document.getElementById('modalExtra').value;
-        tg.sendData(JSON.stringify({action: currentAction, amount: amt, wallet: extra}));
-        closeModal();
+    function showM(t) { act = t; document.getElementById('modal').style.display='flex'; document.getElementById('mTitle').innerText = t=='dep'?'ПОПОЛНЕНИЕ':'ВЫВОД'; document.getElementById('mWallet').style.display = t=='dep'?'none':'block'; }
+    function closeM() { document.getElementById('modal').style.display='none'; }
+    function sendToBot() {
+        let val = document.getElementById('mAmt').value;
+        let wal = document.getElementById('mWallet').value;
+        tg.sendData(JSON.stringify({action: act, amount: val, wallet: wal}));
         tg.close();
     }
-    
-    // Инициализация
-    drawWheel();
-    updateBalance();
+    draw();
 </script>
 </body>
 </html>
