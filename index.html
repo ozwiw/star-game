@@ -7,100 +7,142 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --gold: #ffaa00; --blue: #00f2ff; --bg: #0f111a; --card: #161b22; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow: hidden; }
         .balance-box { background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); width: 100%; text-align: center; font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box; }
-        .mode-switch { display: flex; background: #000; border-radius: 25px; padding: 5px; border: 2px solid var(--blue); margin-bottom: 25px; }
-        .mode-btn { padding: 10px 25px; border-radius: 20px; border: none; color: white; background: transparent; cursor: pointer; font-weight: bold; }
-        .mode-btn.active { background: var(--blue); color: black; }
-        .wheel-container { position: relative; width: 260px; height: 260px; margin-bottom: 30px; }
-        #wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #222; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); transform: rotate(0deg); }
-        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); z-index: 10; }
+        
+        /* Контейнер колеса */
+        .wheel-outer { position: relative; width: 280px; height: 280px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; }
+        #wheelCanvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
+        
+        /* СТРЕЛКА В ЦЕНТРЕ */
+        .needle { 
+            position: absolute; 
+            width: 4px; height: 120px; 
+            background: var(--gold); 
+            top: 50%; left: 50%; 
+            transform-origin: top center; /* Крутим от центра */
+            border-radius: 2px;
+            box-shadow: 0 0 15px var(--gold);
+            z-index: 10;
+            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+            transform: translate(-50%, 0) rotate(0deg);
+        }
+        .needle::after { /* Наконечник стрелки */
+            content: ''; position: absolute; bottom: -10px; left: -8px;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-top: 15px solid var(--gold);
+        }
+        .center-dot { position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; z-index: 11; box-shadow: 0 0 10px #fff; }
+
         .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 25px; box-sizing: border-box; }
-        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 10px; outline: none; }
+        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 10px; font-size: 1.2rem; }
         .m-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-        .m-btn { background: #1a1f29; border: 1px solid #444; color: white; padding: 10px 0; border-radius: 8px; font-size: 0.8rem; }
+        .m-btn { background: #1a1f29; border: 1px solid #444; color: white; padding: 10px 0; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); }
-        .btn-main { width: 100%; background: var(--gold); color: black; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .btn-sub { width: 100%; background: transparent; border: 1px solid var(--blue); color: var(--blue); padding: 10px; border-radius: 12px; cursor: pointer; margin-bottom: 5px; }
-        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-main { width: 100%; background: var(--gold); color: black; border: none; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 10px; }
+        .btn-sub { width: 48%; background: transparent; border: 1px solid var(--blue); color: var(--blue); padding: 10px; border-radius: 12px; cursor: pointer; display: inline-block; }
+        
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div class="balance-box">💰 <span id="bal">1000.00</span> ⭐️</div>
 
-<div class="mode-switch">
-    <button id="bD" class="mode-btn active" onclick="setM('demo')">DEMO</button>
-    <button id="bR" class="mode-btn" onclick="setM('real')">REAL</button>
-</div>
-
-<div class="wheel-container">
-    <div class="pointer"></div>
-    <canvas id="wheel" width="300" height="300"></canvas>
+<div class="wheel-outer">
+    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+    <div class="center-dot"></div>
+    <div id="needle" class="needle"></div>
 </div>
 
 <div class="controls">
     <input type="number" id="bet" value="20">
     <div class="m-grid">
-        <button class="m-btn active" onclick="setMult(2, 50, this)">x2.0</button>
-        <button class="m-btn" onclick="setMult(5, 20, this)">x5.0</button>
-        <button class="m-btn" onclick="setMult(10, 10, this)">x10.0</button>
+        <button class="m-btn active" onclick="setMult(2, 45, this)">x2.0</button>
+        <button class="m-btn" onclick="setMult(5, 18, this)">x5.0</button>
+        <button class="m-btn" onclick="setMult(10, 8, this)">x10.0</button>
         <button class="m-btn" onclick="setMult(50, 2, this)">x50.0</button>
     </div>
-    <button class="btn-main" onclick="spin()">АПГРЕЙД</button>
-    <button class="btn-sub" onclick="showM('dep')">ПОПОЛНИТЬ</button>
-    <button class="btn-sub" onclick="showM('out')">ВЫВОД</button>
+    <button class="btn-main" onclick="spin()">УЛУЧШИТЬ</button>
+    <div style="display: flex; justify-content: space-between;">
+        <button class="btn-sub" onclick="showM('dep')">ПОПОЛНИТЬ</button>
+        <button class="btn-sub" onclick="showM('out')">ВЫВОД</button>
+    </div>
 </div>
 
 <div id="modal">
-    <div style="background:#161b22; padding:20px; border-radius:15px; width:80%; text-align:center; border:1px solid var(--blue);">
-        <h3 id="mTitle">СУММА</h3>
+    <div style="background:#161b22; padding:25px; border-radius:20px; width:85%; text-align:center; border:2px solid var(--blue);">
+        <h3 id="mTitle" style="color:var(--blue)">СУММА</h3>
         <input type="number" id="mAmt" value="100">
-        <input type="text" id="mWallet" placeholder="ID / Кошелек" style="display:none">
-        <button class="btn-main" onclick="sendToBot()">ОТПРАВИТЬ</button>
-        <button class="btn-sub" onclick="closeM()">ОТМЕНА</button>
+        <div id="wBox" style="display:none; margin-top:10px;"><input type="text" id="mWallet" placeholder="ID или Кошелек"></div>
+        <button class="btn-main" style="margin-top:15px;" onclick="sendToBot()">ОТПРАВИТЬ</button>
+        <button class="btn-sub" style="width:100%; border:none;" onclick="closeM()">ОТМЕНА</button>
     </div>
 </div>
 
 <script>
     let tg = window.Telegram.WebApp; tg.expand();
-    let mode = 'demo', demoBal = 1000, currentMult = 2, greenSize = 50, spinning = false, rot = 0, act = '';
+    let demoBal = 1000, currentMult = 2, greenSize = 45, spinning = false, currentRot = 0;
 
-    function setM(m) { mode = m; document.getElementById('bD').className = m=='demo'?'mode-btn active':'mode-btn'; document.getElementById('bR').className = m=='real'?'mode-btn active':'mode-btn'; update(); }
-    function setMult(v, s, b) { currentMult = v; greenSize = s; document.querySelectorAll('.m-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); draw(); }
+    function setMult(v, s, b) { 
+        if(spinning) return; 
+        currentMult = v; greenSize = s; 
+        document.querySelectorAll('.m-btn').forEach(x=>x.classList.remove('active')); 
+        b.classList.add('active'); 
+        draw(); 
+    }
     
     function draw() {
-        const ctx = document.getElementById('wheel').getContext('2d');
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
         ctx.clearRect(0,0,300,300);
         let gRad = (greenSize/100)*Math.PI*2;
-        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140,-Math.PI/2, -Math.PI/2 + gRad); ctx.fillStyle = "#00ff88"; ctx.fill();
-        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140,-Math.PI/2 + gRad, -Math.PI/2 + Math.PI*2); ctx.fillStyle = "#ff3333"; ctx.fill();
+        
+        // Фон (красный проигрыш)
+        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140, 0, Math.PI*2); ctx.fillStyle = "#ff3333"; ctx.fill();
+        // Сектор выигрыша (зеленый) - всегда снизу для удобства
+        ctx.beginPath(); ctx.moveTo(150,150); ctx.arc(150,150,140, Math.PI/2 - gRad/2, Math.PI/2 + gRad/2); ctx.fillStyle = "#00ff88"; ctx.fill();
+        // Обводка
+        ctx.strokeStyle = "#161b22"; ctx.lineWidth = 5; ctx.stroke();
     }
 
-    function update() { document.getElementById('bal').innerText = mode=='demo'?demoBal.toFixed(2):'0.00 REAL'; }
+    function update() { document.getElementById('bal').innerText = demoBal.toFixed(2); }
 
     function spin() {
         if(spinning) return;
         let b = parseFloat(document.getElementById('bet').value);
-        if(b < 20) return alert("Минимум 20⭐️");
-        if(mode == 'demo') {
-            if(demoBal < b) return alert("Нет звезд");
-            spinning = true; demoBal -= b; update();
-            let win = Math.random() < 0.3; // 30% шанс
-            let target = win ? 0 : 180; // 0 - центр зеленого, 180 - центр красного
-            rot += (360*5) + (360 - (rot%360)) - target;
-            document.getElementById('wheel').style.transform = `rotate(${rot}deg)`;
-            setTimeout(() => {
-                if(win) { demoBal += b * currentMult; alert("ВЫИГРЫШ! 🎉"); } else { alert("ПРОИГРЫШ ❌"); }
-                spinning = false; update();
-            }, 4000);
-        } else {
-            tg.sendData(JSON.stringify({action:"spin_real", bet:b}));
-            tg.close();
-        }
+        if(b < 20 || demoBal < b) return alert("Проверьте ставку и баланс!");
+        
+        spinning = true; demoBal -= b; update();
+        
+        let isWin = Math.random() < 0.35; // 35% шанс
+        
+        // 90 градусов (Math.PI/2) — это низ колеса, где у нас зеленый сектор
+        // Если выигрыш — целим в диапазон от 70 до 110 градусов
+        // Если проигрыш — целим в 270 градусов (верх колеса, красный)
+        let targetDeg = isWin ? (90 + (Math.random()*10 - 5)) : (270 + (Math.random()*40 - 20));
+        
+        // Считаем вращение (минимум 5 полных кругов)
+        currentRot += (360 * 5) + (targetDeg - (currentRot % 360));
+        if (currentRot < 0) currentRot += 360;
+
+        const needle = document.getElementById('needle');
+        needle.style.transform = `translate(-50%, 0) rotate(${currentRot}deg)`;
+        
+        setTimeout(() => {
+            if(isWin) { 
+                demoBal += b * currentMult; 
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("🎉 ВЫИГРЫШ! Баланс пополнен."); 
+            } else { 
+                tg.HapticFeedback.notificationOccurred('error');
+                alert("❌ ПРОИГРЫШ. Повезет в следующий раз!"); 
+            }
+            spinning = false; update();
+        }, 4100);
     }
 
-    function showM(t) { act = t; document.getElementById('modal').style.display='flex'; document.getElementById('mTitle').innerText = t=='dep'?'ПОПОЛНЕНИЕ':'ВЫВОД'; document.getElementById('mWallet').style.display = t=='dep'?'none':'block'; }
+    function showM(t) { act = t; document.getElementById('modal').style.display='flex'; document.getElementById('mTitle').innerText = t=='dep'?'ПОПОЛНЕНИЕ':'ВЫВОД'; document.getElementById('wBox').style.display = t=='dep'?'none':'block'; }
     function closeM() { document.getElementById('modal').style.display='none'; }
     function sendToBot() {
         let val = document.getElementById('mAmt').value;
@@ -108,7 +150,8 @@
         tg.sendData(JSON.stringify({action: act, amount: val, wallet: wal}));
         tg.close();
     }
-    draw();
+
+    draw(); update();
 </script>
 </body>
 </html>
