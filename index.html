@@ -8,69 +8,28 @@
     <style>
         :root { --gold: #ffaa00; --blue: #00f2ff; --bg: #0f111a; --card: #161b22; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; overflow-x: hidden; }
-        
-        /* Золотой баланс */
-        .balance-box { 
-            background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); 
-            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4); width: 100%; text-align: center; 
-            font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box;
-        }
-
-        /* Синий переключатель */
-        .mode-switch { 
-            display: flex; background: #000; border-radius: 25px; padding: 5px; border: 2px solid var(--blue);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); margin-bottom: 25px;
-        }
+        .balance-box { background: var(--card); padding: 15px; border-radius: 15px; border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(255, 170, 0, 0.4); width: 100%; text-align: center; font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 20px; box-sizing: border-box; }
+        .mode-switch { display: flex; background: #000; border-radius: 25px; padding: 5px; border: 2px solid var(--blue); box-shadow: 0 0 15px rgba(0, 242, 255, 0.3); margin-bottom: 25px; }
         .mode-btn { padding: 10px 25px; border-radius: 20px; border: none; color: white; background: transparent; cursor: pointer; transition: 0.3s; font-weight: bold; }
         .mode-btn.active { background: var(--blue); color: black; box-shadow: 0 0 10px var(--blue); }
-
-        /* Колесо */
         .wheel-container { position: relative; width: 280px; height: 280px; margin-bottom: 30px; }
-        .wheel { 
-            width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--blue); 
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
-            background: conic-gradient(#00ff88 0% 40%, #ff3333 40% 100%); 
-            transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); 
-        }
-        .pointer { 
-            position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; 
-            border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); 
-            filter: drop-shadow(0 0 5px var(--gold)); z-index: 10; 
-        }
-
-        /* Блок управления */
+        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--blue); box-shadow: 0 0 25px rgba(0, 242, 255, 0.5); background: conic-gradient(#00ff88 0% 40%, #ff3333 40% 100%); transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); filter: drop-shadow(0 0 5px var(--gold)); z-index: 10; }
         .controls { width: 100%; background: var(--card); padding: 20px; border-radius: 25px; border: 1px solid #333; box-sizing: border-box; }
-        input { 
-            width: 100%; background: #000; border: 1px solid var(--blue); color: white; 
-            padding: 15px; border-radius: 12px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; box-sizing: border-box;
-        }
+        input { width: 100%; background: #000; border: 1px solid var(--blue); color: white; padding: 15px; border-radius: 12px; text-align: center; font-size: 1.2rem; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .mult-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
         .m-btn { background: #1a1f29; border: 1px solid #444; color: white; padding: 12px 0; border-radius: 10px; cursor: pointer; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 10px rgba(255, 170, 0, 0.3); }
-
-        .main-btn { 
-            width: 100%; background: var(--gold); color: black; border: none; padding: 18px; 
-            border-radius: 15px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
-            cursor: pointer; margin-bottom: 15px;
-        }
-        .withdraw-btn { 
-            width: 100%; background: transparent; color: var(--blue); border: 1px solid var(--blue); 
-            padding: 12px; border-radius: 15px; cursor: pointer;
-        }
-
-        /* Модальное окно вывода */
-        #withdrawModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
-        }
+        .main-btn { width: 100%; background: var(--gold); color: black; border: none; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 20px rgba(255, 170, 0, 0.5); cursor: pointer; margin-bottom: 10px; }
+        .dep-btn { width: 100%; background: #00ff88; color: black; border: none; padding: 12px; border-radius: 15px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .withdraw-btn { width: 100%; background: transparent; color: var(--blue); border: 1px solid var(--blue); padding: 12px; border-radius: 15px; cursor: pointer; }
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card); padding: 30px; border-radius: 25px; border: 2px solid var(--blue); width: 100%; max-width: 400px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="balance-box">
-        💰 <span id="balanceDisplay">1000.00</span> ⭐️
-    </div>
+    <div class="balance-box">💰 <span id="balanceDisplay">1000.00</span> ⭐️</div>
 
     <div class="mode-switch">
         <button id="btnDemo" class="mode-btn active" onclick="setMode('demo')">DEMO</button>
@@ -83,86 +42,52 @@
     </div>
 
     <div class="controls">
-        <input type="number" id="betInput" value="20" placeholder="Сумма ставки">
+        <input type="number" id="betInput" value="20">
         <div class="mult-grid">
             <button class="m-btn" onclick="setMult(1.2, 70, this)">x1.2</button>
             <button class="m-btn active" onclick="setMult(2.0, 40, this)">x2.0</button>
             <button class="m-btn" onclick="setMult(5.0, 15, this)">x5.0</button>
             <button class="m-btn" onclick="setMult(10.0, 5, this)">x10.0</button>
         </div>
-        <button class="main-btn" onclick="play()">АПГРЕЙД</button>
-        <button class="withdraw-btn" onclick="openWithdraw()">ВЫВОД СРЕДСТВ</button>
+        <button class="main-btn" id="spinBtn" onclick="play()">АПГРЕЙД</button>
+        <button class="dep-btn" onclick="openModal('dep')">ПОПОЛНИТЬ</button>
+        <button class="withdraw-btn" onclick="openModal('out')">ВЫВОД</button>
     </div>
 
-    <div id="withdrawModal">
+    <div id="modal">
         <div class="modal-content">
-            <h2 style="color: var(--blue)">ВЫВОД ЗВЕЗД</h2>
-            <input type="number" id="wAmount" placeholder="Количество звезд">
-            <input type="text" id="wWallet" placeholder="Адрес кошелька / ID">
-            <button class="main-btn" onclick="confirmWithdraw()">ОТПРАВИТЬ ЗАЯВКУ</button>
-            <button class="withdraw-btn" style="border:none" onclick="closeWithdraw()">ОТМЕНА</button>
+            <h2 id="modalTitle" style="color: var(--blue)">ВЫВОД</h2>
+            <input type="number" id="modalAmount" placeholder="Сумма звезд">
+            <input type="text" id="modalExtra" placeholder="Кошелек / Комментарий">
+            <button class="main-btn" onclick="confirmModal()">ПОДТВЕРДИТЬ</button>
+            <button class="withdraw-btn" style="border:none" onclick="closeModal()">ОТМЕНА</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        let mode = 'demo', demoBalance = 1000, realBalance = 0, rotation = 0, currentMult = 2.0, greenZone = 40, isSpinning = false, currentAction = '';
 
-        let mode = 'demo';
-        let demoBalance = 1000;
-        let realBalance = 0; // Сюда бот будет передавать реальные звезды
-        let rotation = 0;
-        let currentMult = 2.0;
-        let greenZone = 40;
-        let isSpinning = false;
-
-        function setMode(m) {
-            if (isSpinning) return;
-            mode = m;
-            document.getElementById('btnDemo').classList.toggle('active', m === 'demo');
-            document.getElementById('btnReal').classList.toggle('active', m === 'real');
-            updateBalance();
-        }
-
-        function setMult(val, zone, btn) {
-            if (isSpinning) return;
-            currentMult = val;
-            greenZone = zone;
-            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('wheel').style.background = `conic-gradient(#00ff88 0% ${greenZone}%, #ff3333 ${greenZone}% 100%)`;
-        }
-
-        function updateBalance() {
-            document.getElementById('balanceDisplay').innerText = (mode === 'demo' ? demoBalance : realBalance).toFixed(2);
-        }
-
+        function setMode(m) { if(isSpinning) return; mode = m; document.getElementById('btnDemo').classList.toggle('active', m === 'demo'); document.getElementById('btnReal').classList.toggle('active', m === 'real'); updateBalance(); }
+        function setMult(val, zone, btn) { if(isSpinning) return; currentMult = val; greenZone = zone; document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('wheel').style.background = `conic-gradient(#00ff88 0% ${greenZone}%, #ff3333 ${greenZone}% 100%)`; }
+        function updateBalance() { document.getElementById('balanceDisplay').innerText = (mode === 'demo' ? demoBalance : realBalance).toFixed(2); }
+        
         function play() {
             if (isSpinning) return;
             let bet = parseFloat(document.getElementById('betInput').value);
-            if (isNaN(bet) || bet < 20) return alert("Минимум 20 звезд!");
-
+            if (bet < 20) return alert("Минимум 20⭐️");
             if (mode === 'demo') {
-                if (demoBalance < bet) return alert("Недостаточно демо-звезд!");
-                isSpinning = true;
-                demoBalance -= bet;
-                updateBalance();
-
-                let win = Math.random() < 0.8; 
+                if (demoBalance < bet) return alert("Мало демо-звезд");
+                isSpinning = true; demoBalance -= bet; updateBalance();
+                let win = Math.random() < 0.8;
                 spin(win);
-
-                setTimeout(() => {
-                    if (win) {
-                        demoBalance += bet * currentMult;
-                        alert("ВЫИГРЫШ! +" + (bet * currentMult).toFixed(2));
-                    } else {
-                        alert("ПРОИГРЫШ");
-                    }
-                    updateBalance();
-                    isSpinning = false;
+                setTimeout(() => { 
+                    if(win) demoBalance += bet * currentMult; 
+                    updateBalance(); isSpinning = false; 
+                    alert(win ? "ВЫИГРЫШ! 🎉" : "ПРОИГРЫШ ❌");
                 }, 4100);
             } else {
-                // В реальном режиме просто шлем запрос боту
                 tg.sendData(JSON.stringify({action: "spin_real", bet: bet}));
                 tg.close();
             }
@@ -170,30 +95,20 @@
 
         function spin(win) {
             const wheel = document.getElementById('wheel');
-            let stopAngle;
-            // Угол 0 - это граница между зеленым и красным (верхняя точка)
-            if (win) {
-                // Останавливаемся в зеленой зоне (справа от 0)
-                stopAngle = Math.random() * (greenZone * 3.6 - 10) + 5;
-            } else {
-                // Останавливаемся в красной зоне (слева от 0)
-                let redStart = (greenZone * 3.6) + 15;
-                stopAngle = redStart + Math.random() * (340 - redStart);
-            }
-            rotation += (360 * 5) - stopAngle; 
+            let stopAngle = win ? (Math.random() * (greenZone * 3.6 - 10) + 5) : ((greenZone * 3.6) + 20 + Math.random() * (330 - (greenZone * 3.6)));
+            rotation += (360 * 5) - stopAngle;
             wheel.style.transform = `rotate(${rotation}deg)`;
         }
 
-        // Логика вывода
-        function openWithdraw() { document.getElementById('withdrawModal').style.display = 'flex'; }
-        function closeWithdraw() { document.getElementById('withdrawModal').style.display = 'none'; }
-        
-        function confirmWithdraw() {
-            let amount = document.getElementById('wAmount').value;
-            if (amount < 100) return alert("Минимальный вывод — 100 звезд!");
-            tg.sendData(JSON.stringify({action: "withdraw", amount: amount}));
-            alert("Заявка принята! Средства будут зачислены в течение 24 часов.");
-            closeWithdraw();
+        function openModal(type) { currentAction = type; document.getElementById('modalTitle').innerText = type === 'dep' ? 'ПОПОЛНЕНИЕ' : 'ВЫВОД'; document.getElementById('modalExtra').style.display = type === 'dep' ? 'none' : 'block'; document.getElementById('modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function confirmModal() {
+            let amt = document.getElementById('modalAmount').value;
+            if(amt < 20) return alert("Минимум 20!");
+            tg.sendData(JSON.stringify({action: currentAction, amount: amt, wallet: document.getElementById('modalExtra').value}));
+            if(currentAction === 'out') alert("Заявка принята! Ожидайте 24 часа.");
+            closeModal();
+            if(currentAction === 'dep') tg.close();
         }
     </script>
 </body>
